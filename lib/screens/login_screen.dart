@@ -1,8 +1,13 @@
 // // ignore_for_file: unnecessary_new, prefer_const_constructors, unused_local_variable
 
-// ignore_for_file: prefer_const_constructors, unnecessary_new
-
+// ignore_for_file: prefer_const_constructors, unnecessary_new, duplicate_import, unused_import, implementation_imports, unnecessary_import
+import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter/src/widgets/placeholder.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:signup_and_login_page_with_firebase_authentication/screens/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:signup_and_login_page_with_firebase_authentication/screens/home_screen.dart';
 import 'package:signup_and_login_page_with_firebase_authentication/screens/registration_screen.dart';
 
 class LogInScreen extends StatefulWidget {
@@ -13,6 +18,8 @@ class LogInScreen extends StatefulWidget {
 }
 
 class _LogInScreenState extends State<LogInScreen> {
+  //firebase
+  final _auth = FirebaseAuth.instance;
   //  form key
 
   final _formkey = GlobalKey<FormState>();
@@ -27,15 +34,15 @@ class _LogInScreenState extends State<LogInScreen> {
       autofocus: false,
       controller: emailController,
       keyboardType: TextInputType.emailAddress,
-      // validator: (value) {
-      //   if (value!.isEmpty) {
-      //     return ("Please Enter your Email");
-      //   }
-      //   if (!RegExp("[a-zA-Z0-9+_.-]+@[a-zA-Z0-9]+.[a-z]").hasMatch(value)) {
-      //     return ("Please Enter a valid Email");
-      //   }
-      //   return null;
-      // },
+      validator: (value) {
+        if (value!.isEmpty) {
+          return ("Please Enter your Email");
+        }
+        if (!RegExp("[a-zA-Z0-9+_.-]+@[a-zA-Z0-9]+.[a-z]").hasMatch(value)) {
+          return ("Please Enter a valid Email");
+        }
+        return null;
+      },
       onSaved: (value) {
         emailController.text = value!;
       },
@@ -54,15 +61,15 @@ class _LogInScreenState extends State<LogInScreen> {
       autofocus: false,
       controller: passwordController,
       obscureText: true,
-      // validator: (value) {
-      //   RegExp regex = new RegExp(r'^.{6,}$');
-      //   if (value!.isEmpty) {
-      //     return ("Password is required for Login");
-      //   }
-      //   if (!regex.hasMatch(value)) {
-      //     return ("Enter Valid Password (Min. 6 Character)");
-      //   }
-      // },
+      validator: (value) {
+        RegExp regex = new RegExp(r'^.{6,}$');
+        if (value!.isEmpty) {
+          return ("Password is required for Login");
+        }
+        if (!regex.hasMatch(value)) {
+          return ("Enter Valid Password (Min. 6 Character)");
+        }
+      },
       onSaved: (value) {
         passwordController.text = value!;
       },
@@ -87,7 +94,7 @@ class _LogInScreenState extends State<LogInScreen> {
         padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
         minWidth: MediaQuery.of(context).size.width,
         onPressed: () {
-          // signIn(emailController.text, passwordController.text);
+          signIn(emailController.text, passwordController.text);
         },
         child: Text(
           'Login',
@@ -159,45 +166,20 @@ class _LogInScreenState extends State<LogInScreen> {
       ),
     );
   }
+
+  //login Function
+  void signIn(String email, String password) async {
+    if (_formkey.currentState!.validate()) {
+      await _auth
+          .signInWithEmailAndPassword(email: email, password: password)
+          .then((uid) => {
+                Fluttertoast.showToast(msg: "Login Successful"),
+                Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => HomeScreen()))
+              })
+          .catchError((e) {
+        Fluttertoast.showToast(msg: e!.message);
+      });
+    }
+  }
 }
-// import 'package:flutter/src/widgets/framework.dart';
-// import 'package:flutter/src/widgets/placeholder.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:fluttertoast/fluttertoast.dart';
-// import 'package:signup_and_login_page_with_firebase_authentication/screens/home_screen.dart';
-
-// class LogInScreen extends StatefulWidget {
-//   const LogInScreen({super.key});
-
-//   @override
-//   State<LogInScreen> createState() => _LogInScreenState();
-// }
-
-// // class _LogInScreenState extends State<LogInScreen> {
-// //  
-// //   
-
-//   //firebase
-//   final _auth = FirebaseAuth.instance;
-
-//   @override
-//   Widget build(BuildContext context) {
-//    
-//     
-//   }
-
-//   void signIn(String email, String password) async {
-//     if (_formkey.currentState!.validate()) {
-//       await _auth
-//           .signInWithEmailAndPassword(email: email, password: password)
-//           .then((uid) => {
-//                 Fluttertoast.showToast(msg: "Login Successful"),
-//                 Navigator.of(context).pushReplacement(
-//                     MaterialPageRoute(builder: (context) => HomeScreen()))
-//               })
-//           .catchError((e) {
-//         Fluttertoast.showToast(msg: e!.message);
-//       });
-//     }
-//   }
-// }

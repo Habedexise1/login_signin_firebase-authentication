@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names, avoid_types_as_parameter_names
+
 class UserModel {
   String? uid;
   String? email;
@@ -15,6 +17,8 @@ class UserModel {
       secondname: Map['secondname'],
     );
   }
+
+  set firstName(String firstName) {}
 
 
 

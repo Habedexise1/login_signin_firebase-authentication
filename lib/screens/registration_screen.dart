@@ -2,7 +2,13 @@
 
 // ignore_for_file: unnecessary_new, non_constant_identifier_names, prefer_const_constructors, unused_local_variable
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
+import '../model/user_model.dart';
+import 'home_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -12,6 +18,11 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
+  final _auth = FirebaseAuth.instance;
+
+  // string for displaying the error Message
+  String? errorMessage;
+
   //  our form key
   final _formkey = GlobalKey<FormState>();
 
@@ -84,10 +95,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       autofocus: false,
       controller: emailEditingController,
       keyboardType: TextInputType.emailAddress,
-
-      //validator:() {},
+      validator: (value) {
+        if (value!.isEmpty) {
+          return ("Please Enter Your Email");
+        }
+        // reg expression for email validation
+        if (!RegExp("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]").hasMatch(value)) {
+          return ("Please Enter a valid email");
+        }
+        return null;
+      },
       onSaved: (value) {
-        emailEditingController.text = value!;
+        firstNameEditingController.text = value!;
       },
       textInputAction: TextInputAction.next,
       decoration: InputDecoration(
@@ -105,8 +124,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       autofocus: false,
       controller: passwordEditingController,
       obscureText: true,
-
-      //validator:() {},
+      validator: (value) {
+        RegExp regex = new RegExp(r'^.{6,}$');
+        if (value!.isEmpty) {
+          return ("Password is required for login");
+        }
+        if (!regex.hasMatch(value)) {
+          return ("Enter Valid Password(Min. 6 Character)");
+        }
+      },
       onSaved: (value) {
         passwordEditingController.text = value!;
       },
@@ -126,8 +152,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       autofocus: false,
       controller: confirmPasswordEditingController,
       obscureText: true,
-
-      //validator:() {},
+      validator: (value) {
+        if (confirmPasswordEditingController.text !=
+            passwordEditingController.text) {
+          return "Password don't match";
+        }
+        return null;
+      },
       onSaved: (value) {
         confirmPasswordEditingController.text = value!;
       },
@@ -150,7 +181,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       child: MaterialButton(
         padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
         minWidth: MediaQuery.of(context).size.width,
-        onPressed: () {},
+        onPressed: () {
+          signUp(emailEditingController.text, passwordEditingController.text);
+        },
         child: Text(
           'SignUp',
           textAlign: TextAlign.center,
@@ -170,6 +203,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             color: Colors.redAccent,
           ),
           onPressed: () {
+            //passing this to a loop
             Navigator.of(context).pop();
           },
         ),
@@ -228,29 +262,74 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
     );
   }
+
+  void signUp(String email, String password) async {
+    if (_formkey.currentState!.validate()) {
+      try {
+        await _auth
+            .createUserWithEmailAndPassword(
+              email: email,
+              password: password,
+            )
+            .then((value) => {postDetailsToFirestore()})
+            .catchError((e) {
+          Fluttertoast.showToast(msg: e!.message);
+        });
+      } on FirebaseAuthException catch (error) {
+        switch (error.code) {
+          case "invalid-email":
+            errorMessage = "Your email address appears to be malformed.";
+            break;
+          case "wrong-password":
+            errorMessage = "Your password is wrong.";
+            break;
+          case "user-not-found":
+            errorMessage = "User with this email doesn't exist.";
+            break;
+          case "user-disabled":
+            errorMessage = "User with this email has been disabled.";
+            break;
+          case "too-many-requests":
+            errorMessage = "Too many requests";
+            break;
+          case "operation-not-allowed":
+            errorMessage = "Signing in with Email and Password is not enabled.";
+            break;
+          default:
+            errorMessage = "An undefined Error happened.";
+        }
+        Fluttertoast.showToast(msg: errorMessage!);
+        print(error.code);
+        postDetailsToFirestore() async {
+          // calling our firestore
+          // calling our user model
+          // sedning these values
+
+          FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+          User? user = _auth.currentUser;
+
+          UserModel userModel = UserModel();
+
+          // writing all the values
+          userModel.email = user!.email;
+          userModel.uid = user.uid;
+          userModel.firstName = firstNameEditingController.text;
+          userModel.secondname = SecondNameEditingController.text;
+
+          await firebaseFirestore
+              .collection("users")
+              .doc(user.uid)
+              .set(userModel.toMap());
+          Fluttertoast.showToast(msg: "Account created successfully :) ");
+
+          Navigator.pushAndRemoveUntil(
+              (context),
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+              (route) => false);
+        }
+      }
+    }
+  }
+
+  postDetailsToFirestore() {}
 }
-// import 'package:flutter/src/widgets/framework.dart';
-// import 'package:flutter/src/widgets/placeholder.dart';
-
-// class RegistrationScreen extends StatefulWidget {
-//   const RegistrationScreen({super.key});
-
-//   @override
-//   State<RegistrationScreen> createState() => _RegistrationScreenState();
-// }
-
-// class _RegistrationScreenState extends State<RegistrationScreen> {
-//  
-
-//   @override
-//   Widget build(BuildContext context) {
-//    
-
-
-//   }
-
-
-
-
-//   void signUp(String email, String password)
-// }
