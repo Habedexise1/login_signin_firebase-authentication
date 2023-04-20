@@ -267,10 +267,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (_formkey.currentState!.validate()) {
       try {
         await _auth
-            .createUserWithEmailAndPassword(
-              email: email,
-              password: password,
-            )
+            .createUserWithEmailAndPassword(email: email, password: password)
             .then((value) => {postDetailsToFirestore()})
             .catchError((e) {
           Fluttertoast.showToast(msg: e!.message);
@@ -300,36 +297,35 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         }
         Fluttertoast.showToast(msg: errorMessage!);
         print(error.code);
-        postDetailsToFirestore() async {
-          // calling our firestore
-          // calling our user model
-          // sedning these values
-
-          FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-          User? user = _auth.currentUser;
-
-          UserModel userModel = UserModel();
-
-          // writing all the values
-          userModel.email = user!.email;
-          userModel.uid = user.uid;
-          userModel.firstName = firstNameEditingController.text;
-          userModel.secondname = SecondNameEditingController.text;
-
-          await firebaseFirestore
-              .collection("users")
-              .doc(user.uid)
-              .set(userModel.toMap());
-          Fluttertoast.showToast(msg: "Account created successfully :) ");
-
-          Navigator.pushAndRemoveUntil(
-              (context),
-              MaterialPageRoute(builder: (context) => HomeScreen()),
-              (route) => false);
-        }
       }
     }
   }
 
-  postDetailsToFirestore() {}
+  postDetailsToFirestore() async {
+    // calling our firestore
+    // calling our user model
+    // sedning these values
+
+    FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+    User? user = _auth.currentUser;
+
+    UserModel userModel = UserModel();
+
+    // writing all the values
+    userModel.email = user!.email;
+    userModel.uid = user.uid;
+    userModel.firstName = firstNameEditingController.text;
+    userModel.secondname = SecondNameEditingController.text;
+
+    await firebaseFirestore
+        .collection("users")
+        .doc(user.uid)
+        .set(userModel.toMap());
+    Fluttertoast.showToast(msg: "Account created successfully :) ");
+
+    Navigator.pushAndRemoveUntil(
+        (context),
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+        (route) => false);
+  }
 }
